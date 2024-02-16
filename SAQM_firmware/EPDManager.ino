@@ -1,33 +1,30 @@
 #include <string>
+#include <sstream> 
 #include <map>
 
 #include <GxEPD2_BW.h>
 #include "systemConfig.h"
-#include "EPDManagerAux.h"
+#include "SAQMAux.h"
 
 #include <Fonts/FreeSansBold24pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/FreeSansBold9pt7b.h>
 
 #include "time.h"
 
 GxEPD2_BW<GxEPD2_290_BS, GxEPD2_290_BS::HEIGHT> display(GxEPD2_290_BS(EPD_CS,  EPD_DC,  EPD_RES, EPD_BUSY));
-
-
 
 void EPDInit(bool clearDisplay){
     display.init(115200,true,50,false);
     display.setRotation(1);
 
     if(clearDisplay) display.clearScreen();
-
-    display.setPartialWindow(0, 0, display.width(), display.height());
 }
-
 
 void EPDUpdateDate(struct tm dateInfo, bool updateDate){
     
+    display.setPartialWindow(hourDateBox.X, hourDateBox.Y, hourDateBox.Width, hourDateBox.Height);
     display.setFont(&FreeSansBold24pt7b);
-
     display.setTextColor(GxEPD_BLACK);
 
     //Build hour
@@ -55,15 +52,62 @@ void EPDUpdateDate(struct tm dateInfo, bool updateDate){
     display.nextPage();
 }
 
+void EPDUpdateForecast(){}
 
-void EPDUpdateForecast(){
+void EPDUpdateIndoorMeas(struct BME680readings readings){
+    std::string measString;
+    std::ostringstream stream;
+    stream.precision(1);
 
+    //Save original cursor position:
+    uint16_t originalCursorY = envioromentalBox.cursorY;
+
+    display.setPartialWindow(envioromentalBox.X, envioromentalBox.Y, envioromentalBox.Width, envioromentalBox.Height);
+    display.setFont(&FreeSans9pt7b);
+
+    display.setTextColor(GxEPD_WHITE);
+
+    display.firstPage();
+    display.fillRect(envioromentalBox.X, envioromentalBox.Y, envioromentalBox.Width, envioromentalBox.Height, GxEPD_BLACK);
+
+    display.setFont(&FreeSansBold9pt7b);
+    display.setCursor(envioromentalBox.X, envioromentalBox.cursorY);
+    display.print("Indoor");
+
+    display.setFont(&FreeSans9pt7b);
+    //Print temperature
+    envioromentalBox.cursorY += envioromentalBox.primaryFontSize * 2;
+    display.setCursor(envioromentalBox.X, envioromentalBox.cursorY);
+    stream << std::fixed << readings.temperature;
+    measString = stream.str() + "C";
+    display.print(measString.c_str());
+
+    //Print humidity
+    envioromentalBox.cursorY += envioromentalBox.primaryFontSize * 3;
+    display.setCursor(envioromentalBox.X, envioromentalBox.cursorY);
+    measString.clear();
+    stream.str("");
+    stream << std::fixed << readings.humidity;
+    measString = stream.str() + "%";
+    display.print(measString.c_str());
+
+    //Print pressure
+    envioromentalBox.cursorY += envioromentalBox.primaryFontSize * 3;
+    display.setCursor(envioromentalBox.X, envioromentalBox.cursorY);
+    measString.clear();
+    measString = std::to_string(readings.pressure) + "hPa";
+    display.print(measString.c_str());
+
+    //Print Air quality
+    envioromentalBox.cursorY += envioromentalBox.primaryFontSize * 3;
+    display.setCursor(envioromentalBox.X, envioromentalBox.cursorY);
+    measString.clear();
+    measString = readings.airQualityLevel;
+    display.print(measString.c_str());
+
+    display.nextPage();
+
+    envioromentalBox.cursorY = originalCursorY;
 }
 
-void EPDUpdateIndoorMeas(){
-
-}
-
-void EPDUpdateHWStatus(){
-
-}
+void EPDUpdateHWStatus(){}
