@@ -35,10 +35,10 @@ struct envioromentalBox{
 } envioromentalBox;
 
 struct BME680readings{
-    float temperature;
-    uint32_t pressure;
-    float humidity;
-    std::string airQualityLevel;
+    float temperature = 0.0;
+    uint32_t pressure = 0;
+    float humidity = 0.0;
+    std::string airQualityLevel = "NoNe";
 };
 
 
@@ -52,12 +52,17 @@ struct forecastBox{
     uint16_t Height = 62;
     uint16_t cursorY = Y + primaryFontSize * 2;
     uint16_t cursorX = X;
+    uint16_t offsetDataWind = 96;
+    uint16_t iconOffsetX = 8;
+    uint16_t iconOffsetY = 35;
     
 } forecastBox;
 
 struct forecastData{
-    float temperature;
-    uint32_t pressure;
-    float humidity;
-    std::string airQualityLevel;
+    int temperature = 0;
+    uint32_t pressure = 0;
+    uint8_t humidity = 0;
+    std::string windDir = "NaN";
+    uint8_t windSpeed = 0;
+    uint8_t iconCode = 0;
 };

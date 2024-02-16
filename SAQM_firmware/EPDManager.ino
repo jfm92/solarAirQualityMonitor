@@ -5,6 +5,7 @@
 #include <GxEPD2_BW.h>
 #include "systemConfig.h"
 #include "SAQMAux.h"
+#include "icons.h"
 
 #include <Fonts/FreeSansBold24pt7b.h>
 #include <Fonts/FreeSans9pt7b.h>
@@ -52,7 +53,39 @@ void EPDUpdateDate(struct tm dateInfo, bool updateDate){
     display.nextPage();
 }
 
-void EPDUpdateForecast(){}
+void EPDUpdateForecast(struct forecastData data){
+    // Data preparation
+    std::string tempForecast = std::to_string(data.temperature) + "C";
+    std::string humidityForecast = std::to_string(data.humidity) + "%";
+    std::string windSPeedForecast = std::to_string(data.windSpeed) + "m/s";
+
+    display.setPartialWindow(forecastBox.X, forecastBox.Y, forecastBox.Width, forecastBox.Height);
+
+    display.setFont(&FreeSansBold9pt7b);
+    display.setTextColor(GxEPD_BLACK);
+
+    display.firstPage();
+    display.fillRect(forecastBox.X, forecastBox.Y, forecastBox.Width, forecastBox.Height, GxEPD_WHITE);
+
+    display.drawFastHLine(forecastBox.X, forecastBox.Y + 5, forecastBox.Width, GxEPD_BLACK );
+
+    display.setCursor(forecastBox.cursorX, forecastBox.cursorY - forecastBox.primaryFontSize);
+    display.print(tempForecast.c_str());
+
+    display.setCursor(forecastBox.cursorX, forecastBox.cursorY);
+    display.print(humidityForecast.c_str());
+
+    display.setCursor(forecastBox.cursorX + forecastBox.offsetDataWind, forecastBox.cursorY - forecastBox.primaryFontSize);
+    display.print(data.windDir.c_str());
+
+    display.setCursor(forecastBox.cursorX + forecastBox.offsetDataWind, forecastBox.cursorY);
+    display.print(windSPeedForecast.c_str());
+
+    display.nextPage();
+
+    //Print weather icon
+    display.drawImage(iconMap[data.iconCode], forecastBox.X + forecastBox.iconOffsetX ,forecastBox.iconOffsetY, 48,48);
+}
 
 void EPDUpdateIndoorMeas(struct BME680readings readings){
     std::string measString;
