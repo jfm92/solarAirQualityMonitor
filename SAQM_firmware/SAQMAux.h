@@ -58,11 +58,16 @@ struct forecastBox{
     
 } forecastBox;
 
-struct forecastData{
+struct currenWeatherData{
     int temperature = 0;
     uint32_t pressure = 0;
     uint8_t humidity = 0;
-    std::string windDir = "NaN";
+    uint16_t windDir = 0;
     uint8_t windSpeed = 0;
     uint8_t iconCode = 0;
 };
+
+std::vector<std::string> windDirectionENG = {"N", "NE", "E", "SE", "SE","S","SW","W","NW"};
+std::vector<std::string> windDirectionESP = {"N", "NE", "E", "SE", "SE","S","SO","O","NO"};
+
+std::map<std::string, std::vector<std::string>> windDirection = {{"ESP", windDirectionESP}, {"ENG", windDirectionENG}};
