@@ -4,8 +4,12 @@
 
 #include "systemConfig.h"
 
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
 //Delete
 #include "temporary.h"
+const char* time_zone = "CET-1CEST,M3.5.0,M10.5.0/3";
 
 bool wifiConnection(){
     bool succeed = true;
@@ -36,7 +40,8 @@ bool syncDateTime(){
     uint8_t NTPTry = 0;
 
     sntp_servermode_dhcp(1);
-    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
+
+    configTzTime(time_zone, ntpServer1, ntpServer2);
 
     if(!wifiConnection()) return !succeed;
 
@@ -53,3 +58,63 @@ bool syncDateTime(){
 
     return succeed;
 }
+
+void getDateTime(struct tm *dateInfo){
+  sntp_servermode_dhcp(1);
+  configTzTime(time_zone, ntpServer1, ntpServer2);
+  getLocalTime(dateInfo);
+}
+
+
+
+
+void getCurrentWeather(struct currenWeatherData *data){
+  WiFiClient client;
+  HTTPClient http;
+
+  JsonDocument doc;
+
+  //Build API request
+  std::string serverPath = "http://api.openweathermap.org/data/2.5/weather?q=" + city + "," + countryCode +"&APPID=" + openWeatherMapApiKey + "&units=metric";
+  String jsonBuffer = "{}";
+
+  Serial.println("Requesting info");
+
+  // Get data from API
+  http.begin(client, serverPath.c_str());
+
+  int httpResponseCode = http.GET();
+
+  if (httpResponseCode>0) {
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    jsonBuffer = http.getString();
+  }
+  else {
+    Serial.print("Error code: ");
+    Serial.println(httpResponseCode);
+
+    return;
+  }
+  // Free resources
+  http.end();
+
+  /////////////////////////////////////////////
+
+  Serial.println(jsonBuffer);
+
+  DeserializationError error = deserializeJson(doc, jsonBuffer);
+  if (error) {
+    Serial.println(F("jsonBuffer.parseObject() failed"));
+    return;
+  }
+
+  const char * icon = doc["weather"][0]["icon"];
+  Serial.println(icon);
+  data->temperature = doc["main"][F("temp")];
+  data->humidity = doc["main"]["humidity"];
+  data->windSpeed = doc["wind"]["speed"];
+  data->windDir = doc["wind"]["deg"];
+
+}
+
